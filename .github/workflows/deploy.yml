@@ -14,8 +14,7 @@ jobs:
         run: |
           digest=$(curl -s -H "Authorization: Bearer ${TOKEN}" \
             -H "Accept: application/vnd.oci.image.manifest.v1+json" \
-            https://ghcr.io/v2/trsjucpai/${IMAGE}/manifests/$TAG \
-            -I | grep -i "Docker-Content-Digest" | awk '{print $2}' | tr -d '\r')
+            https://ghcr.io/v2/trsjucpai/${IMAGE}/manifests/$TAG 
           echo "Digest: $digest"
           echo "digest=$digest" >> $GITHUB_OUTPUT
       # 更新 chart
