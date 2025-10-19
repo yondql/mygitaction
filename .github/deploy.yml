@@ -1,0 +1,46 @@
+name: Deploy to Server
+on:
+  push:
+    branches: [ "main", "dev" ]
+
+jobs:
+  build-image:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get GHCR image digest via API
+        env:
+          IMAGE_NAME: trsjucpai-wallet-worker
+          OWNER: trsjucpai
+          TAG: dev
+        run: |
+          digest=$(curl -s -I \
+            -H "Accept: application/vnd.docker.distribution.manifest.v2+json" \
+            -u "${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}" \
+            "https://ghcr.io/v2/trsjucpai/$IMAGE_NAME/manifests/$TAG" \
+            | grep -i Docker-Content-Digest | awk '{print $2}' | tr -d $'\r')
+          echo "TRSJUC_IMG_DIGEST=$digest" >> $GITHUB_ENV
+          echo "Digest: $digest"
+
+      # 更新 chart
+      - name: Checkout Helm chart repo
+        uses: actions/checkout@v3
+        with:
+          repository: trsjucpai/trsjucpai-chart.git
+          token: ${{ secrets.GITHUB_TOKEN }}
+          ref: ${{ github.ref_name }}
+          path: chart-repo
+
+      # 更新 digest
+      - name: Update image digest in values.yaml
+        run: |
+          sed -i "s|tag: .*|tag: $TRSJUC_IMG_DIGEST|" chart-repo/$TRSJUC_ARTIFACT/values.yaml
+
+      # 提交
+      - name: Commit and push chart changes
+        run: |
+          cd chart-repo
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add values.yaml
+          git commit -m "Update image digest ${{ steps.digest.outputs.TRSJUC_IMG_DIGEST }}"
+          git push
