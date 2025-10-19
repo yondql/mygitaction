@@ -10,17 +10,14 @@ jobs:
       - name: Get GHCR image digest via API
         env:
           IMAGE_NAME: trsjucpai-wallet-worker
-          OWNER: trsjucpai
           TAG: dev
         run: |
-          digest=$(curl -s -I \
-            -H "Accept: application/vnd.docker.distribution.manifest.v2+json" \
-            -u "${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}" \
-            "https://ghcr.io/v2/trsjucpai/$IMAGE_NAME/manifests/$TAG" \
-            | grep -i Docker-Content-Digest | awk '{print $2}' | tr -d $'\r')
-          echo "TRSJUC_IMG_DIGEST=$digest" >> $GITHUB_ENV
+          digest=$(curl -s -H "Authorization: Bearer ${TOKEN}" \
+            -H "Accept: application/vnd.oci.image.manifest.v1+json" \
+            https://ghcr.io/v2/${IMAGE#ghcr.io/}/manifests/$TAG \
+            -I | grep -i "Docker-Content-Digest" | awk '{print $2}' | tr -d '\r')
           echo "Digest: $digest"
-
+          echo "digest=$digest" >> $GITHUB_OUTPUT
       # 更新 chart
       - name: Checkout Helm chart repo
         uses: actions/checkout@v3
