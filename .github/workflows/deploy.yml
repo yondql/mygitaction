@@ -17,9 +17,9 @@ jobs:
       - name: getver
         env:
           GH_USER: ${{ github.actor }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GH_PAT }}
         run: |
-          response=$(curl -s -u "${GH_USER}:${GH_TOKEN}" \
+          response=$(curl -s -u "${GH_USER}:${GH_PAT}" \
             -H "Accept: application/vnd.github+json" \
               "https://api.github.com/orgs/trsjucpai/packages/container/trsjucpai-wallet-worker/versions")
           echo "xxxxxx=$response" >> $GITHUB_OUTPUT
