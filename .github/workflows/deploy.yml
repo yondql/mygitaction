@@ -1,13 +1,12 @@
 name: Deploy to Server
 on:
   push:
-    branches: [ "main", "dev" ]
+    branches: ["main", "dev"]
 
 jobs:
   build-image:
     runs-on: ubuntu-latest
     steps:
-
       - name: Install jq binary
         run: |
           curl -L -o /usr/local/bin/jq https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64
@@ -18,10 +17,18 @@ jobs:
         env:
           GH_USER: ${{ github.actor }}
           GH_TOKEN: ${{ secrets.GH_PAT }}
+          IMAGE_NAME: trsjucpai-wallet-worker
+          TAG: dev
         run: |
           response=$(curl -s -u "${GH_USER}:${GH_TOKEN}" \
             -H "Accept: application/vnd.github+json" \
-              "https://api.github.com/orgs/trsjucpai/packages/container/trsjucpai-wallet-worker/versions")
+            "https://api.github.com/orgs/trsjucpai/packages/container/${IMAGE_NAME}/versions" \
+            | jq -r ".[] | select(.metadata.container.tags[]?==\"${TAG}\") | .metadata.container.digest" | head -n1))
+
+          digest=$(curl -s -u USER:TOKEN \
+            -H "Accept: application/vnd.docker.distribution.manifest.v2+json" \
+            -I https://ghcr.io/v2/trsjucpai/trsjucpai-wallet-worker/manifests/0.1-snapshot \
+            | grep Docker-Content-Digest | awk '{print $2}' | tr -d $'\r')
           echo $response
           echo "xxxxxx=$response" >> $GITHUB_OUTPUT
 
