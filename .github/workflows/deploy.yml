@@ -14,10 +14,13 @@ jobs:
           IMAGE_NAME: trsjucpai-wallet-worker
           TAG: dev
         run: |
-          digest=$(curl -s \
+          IMG_ACCESS_TOKEN=$(curl -s \
             -u "$GH_USER:$GH_TOKEN" \
             "https://ghcr.io/token?scope=repository=trsjucpai/${IMAGE_NAME}:pull" \
             | sed -n 's/.*"token":"\([^"]*\)".*/\1/p')
+          digest=$(curl -s -H "Authorization: Bearer ${IMG_ACCESS_TOKEN}" \
+            -H "Accept: application/vnd.oci.image.manifest.v1+json" \
+            https://ghcr.io/v2/trsjucpai/${IMAGE_NAME}/manifests/${TAG})
           echo "Digest: $digest"
           echo "digest=$digest" >> $GITHUB_OUTPUT
       # 更新 chart
