@@ -10,7 +10,7 @@ jobs:
       - name: Get GHCR image digest via API
         env:
           GH_USER: ${{ github.actor }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GH_PAT }}
           IMAGE_NAME: trsjucpai-wallet-worker
           TAG: dev
         run: |
