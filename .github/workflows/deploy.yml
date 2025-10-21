@@ -9,13 +9,15 @@ jobs:
     steps:
       - name: Get GHCR image digest via API
         env:
+          GH_USER: ${{ github.actor }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           IMAGE_NAME: trsjucpai-wallet-worker
           TAG: dev
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          digest=$(curl -s -H "Authorization: Bearer ${GH_TOKEN}" \
-            -H "Accept: application/vnd.oci.image.manifest.v1+json" \
-            https://ghcr.io/v2/trsjucpai/${IMAGE}/manifests/$TAG)
+          digest=$(curl -s \
+            -u "$GH_USER:$GH_TOKEN" \
+            "https://ghcr.io/token?scope=repository=trsjucpai/${IMAGE_NAME}:pull" \
+            | sed -n 's/.*"token":"\([^"]*\)".*/\1/p')
           echo "Digest: $digest"
           echo "digest=$digest" >> $GITHUB_OUTPUT
       # 更新 chart
